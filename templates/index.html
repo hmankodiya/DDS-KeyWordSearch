@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+        }
+        .result {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .result h3 {
+            margin: 0;
+            color: #333;
+        }
+        .result p {
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Search News</h1>
+    <form id="search-form">
+        <input type="text" id="query" placeholder="Enter search term" class="search-bar">
+        <button type="submit">Search</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById("search-form").addEventListener("submit", async function (e) {
+            e.preventDefault(); // Prevent form submission from refreshing the page
+
+            const query = document.getElementById("query").value;
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = ""; // Clear previous results
+
+            if (!query) {
+                resultsDiv.innerHTML = "<p>Please enter a search term.</p>";
+                return;
+            }
+
+            try {
+                const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    resultsDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+                    return;
+                }
+
+                if (data.length === 0) {
+                    resultsDiv.innerHTML = "<p>No results found.</p>";
+                    return;
+                }
+
+                data.forEach(result => {
+                    const source = result._source;
+                    const resultDiv = document.createElement("div");
+                    resultDiv.className = "result";
+                    resultDiv.innerHTML = `
+                        <h3>${source.title}</h3>
+                        <p>${source.text}</p>
+                        <small>Label: ${source.label}</small>
+                    `;
+                    resultsDiv.appendChild(resultDiv);
+                });
+            } catch (error) {
+                resultsDiv.innerHTML = `<p>Error fetching results: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
